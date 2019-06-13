@@ -1,120 +1,106 @@
-from chanutils import get_doc, select_all, select_one, get_attr, get_text
+from chanutils import get_doc, select_all, select_one, get_attr, get_text, get_json
 from playitem import PlayItem, PlayItemList
+import lxml.etree
 
-_SEARCH_URL = "https://xnxx.com"
-
+_SEARCH_URL = "https://xnxx.com/search/"
+_ROOT_URL = "https://xnxx.com"
 _FEEDLIST = [
-  {'title':'18', 'url':'http://www.xnxx.com/c/Teen-13'},
-  {'title':'Amateur', 'url':'http://www.xnxx.com/c/Amateur-17'},
-  {'title':'American', 'url':'http://www.xnxx.com/tags/american'},
-  {'title':'Anal Sex', 'url':'http://www.xnxx.com/c/Anal-12'},
-  {'title':'Anime', 'url':'http://www.xnxx.com/c/Anime-41'},
-  {'title':'Arab/Arabian', 'url':'http://www.xnxx.com/tags/arab'},
-  {'title':'Asian Woman', 'url':'http://www.xnxx.com/c/Asian%20Woman-32'},
-  {'title':'Ass', 'url':'http://www.xnxx.com/c/Ass-14'},
-  {'title':'Ass gaping', 'url':'http://www.xnxx.com/tags/gape'},
-  {'title':'Ass to Mouth', 'url':'http://www.xnxx.com/c/Ass%20to%20Mouth-29'},
-  {'title':'Ass Fucked', 'url':'http://www.xnxx.com/c/Anal-12'},
-  {'title':'Babysitter', 'url':'http://www.xnxx.com/tags/babysitter'},
-  {'title':'BBW', 'url':'http://www.xnxx.com/c/bbw-51'},
-  {'title':'BDSM', 'url':'http://www.xnxx.com/c/BDSM-44'},
-  {'title':'Beach Sex', 'url':'http://www.xnxx.com/tags/beach'},
-  {'title':'Big Ass', 'url':'http://www.xnxx.com/c/Big%20ass-24'},
-  {'title':'Big Cock', 'url':'http://www.xnxx.com/c/big%20cock-34'},
-  {'title':'Big Girl', 'url':'http://www.xnxx.com/c/bbw-51'},
-  {'title':'Big Tits', 'url':'http://www.xnxx.com/c/big%20tits-23'},
-  {'title':'Black Girls', 'url':'http://www.xnxx.com/c/Black%20Woman-30'},
-  {'title':'Black Hair', 'url':'http://www.xnxx.com/c/Brunette-25'},
-  {'title':'Blonde', 'url':'http://www.xnxx.com/c/Blonde-20'},
-  {'title':'Blowjob', 'url':'http://www.xnxx.com/c/Blowjob-15'},
-  {'title':'Bondage', 'url':'http://www.xnxx.com/tags/bondage'},
-  {'title':'Brazilian', 'url':'http://www.xnxx.com/tags/brazilian'},
-  {'title':'Brunette', 'url':'http://www.xnxx.com/c/Brunette-25'},
-  {'title':'Butt', 'url':'http://www.xnxx.com/c/Ass-14'},
-  {'title':'Cam Videos', 'url':'http://www.xnxx.com/tags/webcam'},
-  {'title':'Casting', 'url':'http://www.xnxx.com/tags/casting'},
-  {'title':'Chubby', 'url':'http://www.xnxx.com/tags/chubby'},
-  {'title':'Classic View', 'url':'http://multi.xnxx.com/'},
-  {'title':'Classic Porn', 'url':'http://www.xnxx.com/tags/classic'},
-  {'title':'Clips(small)', 'url':'http://multi.xnxx.com/3thumbs/movie/d/on/small/all/index.html'},
-  {'title':'College', 'url':'http://www.xnxx.com/tags/college'},
-  {'title':'Compilation', 'url':'http://www.xnxx.com/tags/compilation'},
-  {'title':'Creampie', 'url':'http://www.xnxx.com/c/Creampie-40'},
-  {'title':'Cumshot', 'url':'http://www.xnxx.com/c/Cumshot-18'},
-  {'title':'Deepthroat', 'url':'http://www.xnxx.com/tags/deepthroat'},
-  {'title':'Doctor', 'url':'http://www.xnxx.com/tags/doctor'},
-  {'title':'Ebony', 'url':'http://www.xnxx.com/c/Black%20Woman-30'},
-  {'title':'Ex-Girlfriend', 'url':'http://www.xnxx.com/tags/girlfriend'},
-  {'title':'Exhibitionism', 'url':'http://www.xnxx.com/tags/public'},
-  {'title':'Fat', 'url':'http://www.xnxx.com/tags/fat'},
-  {'title':'Female Ejaculation', 'url':'http://www.xnxx.com/tags/squirting'},
-  {'title':'Fisting / Fist-Fucking', 'url':'http://www.xnxx.com/tags/fisting'},
-  {'title':'French / France', 'url':'http://www.xnxx.com/tags/french'},
-  {'title':'Fucked / Fucking', 'url':'http://www.xnxx.com/tags/fucked'},
-  {'title':'Gagging', 'url':'http://www.xnxx.com/tags/gagging'},
-  {'title':'Galleries', 'url':'http://multi.xnxx.com/'},
-  {'title':'Gangbang', 'url':'http://www.xnxx.com/tags/gangbang'},
-  {'title':'Gape/Gapping', 'url':'http://www.xnxx.com/tags/gaping'},
-  {'title':'Gay Porn', 'url':'http://www.xnxx.com/c/Gay-45'},
-  {'title':'German', 'url':'http://www.xnxx.com/tags/german'},
-  {'title':'Girlfriend', 'url':'http://www.xnxx.com/tags/girlfriend'},
-  {'title':'Granny', 'url':'http://www.xnxx.com/tags/granny'},
-  {'title':'Hairy Pussy', 'url':'http://www.xnxx.com/tags/hairy'},
-  {'title':'Handjob', 'url':'http://www.xnxx.com/tags/handjob'},
-  {'title':'Hardcore', 'url':'http://www.xnxx.com/c/Hardcore-35'},
-  {'title':'Heels', 'url':'http://www.xnxx.com/c/Heels-43'},
-
+    {'title': 'Compilation', 'url': '/search/compilation?top'},
+    {'title': 'Cuckold', 'url': '/tags/cuckold'},
+    {'title': 'Amateur', 'url': '/tags/amateur'},
+    {'title': 'Public', 'url': '/tags/public'},
+    {'title': 'Shemale', 'url': '/search/shemale'},
+    {'title': 'Gay Porn', 'url': '/search/gay'},
+    {'title': 'Taboo', 'url': '/search/taboo?top'},
+    {'title': 'Lesbian', 'url': '/search/lesbian'},
+    {'title': 'Big ass latina', 'url': '/search/big+ass+latina?top'},
+    {'title': 'Mature Women', 'url': '/search/mature'},
+    {'title': 'Stepmom and son', 'url': '/search/stepmom+and+son?top'},
+    {'title': 'Black Girls', 'url': '/search/black_woman'},
+    {'title': 'Sleeping', 'url': '/search/sleeping?top'},
+    {'title': 'Anal Sex', 'url': '/search/anal'},
+    {'title': 'Wife', 'url': '/search/wife?top'},
+    {'title': 'Big Ass', 'url': '/search/big_ass'},
+    {'title': 'Big black ass', 'url': '/search/big+black+ass?top'},
+    {'title': 'BBW', 'url': '/search/bbw'},
+    {'title': 'Real mom and son', 'url': '/search/real+mom+and+son?top'},
+    {'title': 'REAL Amateur', 'url': '/search/real_amateur'},
+    {'title': 'Young teen forced', 'url': '/search/young+teen+forced?top'},
+    {'title': 'Creampie', 'url': '/search/creampie'},
+    {'title': 'Chubby', 'url': '/search/chubby?top'},
+    {'title': 'Milf', 'url': '/search/milf'},
+    {'title': 'Son forced mom', 'url': '/search/son+forced+mom?top'},
+    {'title': 'Big Tits', 'url': '/search/big_tits'},
+    {'title': 'Hardcore', 'url': '/search/hardcore?top'},
+    {'title': 'Latina', 'url': '/search/latina'},
+    {'title': 'Pov', 'url': '/search/pov?top'},
+    {'title': '18', 'url': '/search/teen'},
+    {'title': 'Cheating wife', 'url': '/search/cheating+wife?top'},
+    {'title': 'India / Indian girls', 'url': '/search/indian'},
+    {'title': 'Hot milf', 'url': '/search/hot+milf?top'}
 ]
+
+
 def name():
-  return 'XNXX'
+    return 'XNXX'
+
 
 def image():
-  return 'icon.png'
+    return 'icon.png'
+
 
 def description():
-  return "XNXX Channel (<a target='_blank' href='https://xnxx.com'>https://xnxx.com/a>)."
+    return "XNXX Channel (<a target='_blank' href='https://xnxx.com'>https://xnxx.com</a>)."
+
 
 def feedlist():
-  return _FEEDLIST
+    return _FEEDLIST
+
 
 def feed(idx):
-  doc = get_doc(_FEEDLIST[idx]['url'])
-  rtree = select_all(doc, 'div.thumbs li')
-  results = PlayItemList()
-  for l in rtree:
-    el = select_one(l, 'a')
-    url = get_attr(el, 'href')
-    el = select_one(l, 'img')
-    img = get_attr(el, 'src')
-    el = select_one(l, 'h4.talk-link__speaker')
-    subtitle = get_text(el)
-    el = select_one(l, 'a span')
-    title = get_text(el)
-    results.add(PlayItem(title, img, url, subtitle))
-  return results
+    doc = get_doc(_ROOT_URL + _FEEDLIST[idx]['url'])
+    return _extract(doc)
+
+
+def _extract(doc):
+    rtree = select_all(doc, 'div.thumb-block')
+    results = PlayItemList()
+    for l in rtree:
+        ti = select_one(l, 'div.thumb-inside')
+        ael = select_one(ti, 'a')
+        url = _ROOT_URL + get_attr(ael, 'href')
+        imgel = select_one(ael, 'img')
+        img = get_attr(imgel, 'data-src')
+        img = img.replace('THUMBNUM', '2')
+        tu = select_one(l, 'div.thumb-under')
+        el = select_one(tu, 'a')
+        title = get_text(el)
+        el = select_one(tu, 'p.metadata')
+        lxml.etree.strip_tags(el, '*')
+        strings = el.text.replace('\n', ' ').split(' ')
+        strings = [x for x in strings if x.strip()]
+        if len(strings) == 2:
+            size = strings[0]
+            rating = "NA"
+            duration = strings[1]
+        elif len(strings) == 3:
+            size = strings[0]
+            rating = strings[1]
+            duration = strings[2]
+        elif len(strings) == 4:
+            size = strings[0]
+            rating = strings[1]
+            duration = strings[2] + " " + strings[3]
+        subtitle = _subtitle(
+            {'Duration': duration, 'Size': size, 'Rating': rating})
+        results.add(PlayItem(title, img, url, subtitle))
+    return results
+
+
+def _subtitle(dict):
+    return ', '.join(['%s: %s' % (key, value) for (key, value) in dict.items()])
+
 
 def search(q):
-  data = get_json(_SEARCH_URL, params={'q':q}, proxy=True)
-  if not 'list' in data:
-    return []
-  rtree = data['list']
-  results = PlayItemList()
-  for r in rtree:
-    cat = r['category']
-    if not (cat in _CAT_WHITELIST):
-      continue
-    title = replace_entity(r['title'])
-    subs = None
-    if cat == 'Movies':
-      subs = movie_title_year(title)
-    elif cat == 'TV':
-      subs = series_season_episode(title)
-    img = '/img/icons/film.svg'
-    if cat == 'Music':
-      img = '/img/icons/music.svg'
-    size = byte_size(r['size'])
-    subtitle = chanutils.torrent.subtitle(size, r['seeds'], r['peers'])
-    url = r['torrentLink']
-    results.add(TorrentPlayItem(title, img, url, subtitle, subs=subs))
-  return results
-
+    doc = get_doc(_SEARCH_URL + q)
+    return _extract(doc)
