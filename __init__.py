@@ -81,18 +81,18 @@ def _extract(doc):
         strings = [x for x in strings if x.strip()]
         if len(strings) == 2:
             size = strings[0]
-            rating = "NA"
+            views = "NA"
             duration = strings[1]
         elif len(strings) == 3:
             size = strings[0]
-            rating = strings[1]
+            views = strings[1]
             duration = strings[2]
         elif len(strings) == 4:
             size = strings[0]
-            rating = strings[1]
+            views = strings[1]
             duration = strings[2] + " " + strings[3]
         subtitle = _subtitle(
-            {'Duration': duration, 'Size': size, 'Rating': rating})
+            {'Duration': duration, 'Size': size, 'Views': views})
         results.add(PlayItem(title, img, url, subtitle))
     return results
 
