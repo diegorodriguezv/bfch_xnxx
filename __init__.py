@@ -98,17 +98,43 @@ def feedlist():
 
 
 def feed(idx):
-    doc = get_doc(_ROOT_URL + _FEEDLIST[idx]["url"])
-    return _extract(doc)
+    return _extract(_listing(_ROOT_URL + _FEEDLIST[idx]["url"]))
 
 
 def search(q):
-    doc = get_doc(_SEARCH_URL + q)
-    return _extract(doc)
+    return _extract(_listing(_SEARCH_URL + q))
+
+
+def _listing(url):
+    """
+    Fetch a listing page, or nothing at all.
+
+    The site answers 404 for some terms outright, and a search term is something
+    the person searching chose -- so a term it declines is an ordinary outcome,
+    not a fault. Raised, it came back as a 500 carrying a stack trace, which the
+    interface has no way to explain and shows raw.
+
+    A listing page that could not be read has no videos in it, and the interface
+    already has a line for exactly that: "There are no results for this query."
+    Letting the empty list reach it is the honest answer here -- the search did
+    return nothing -- and it is the answer the interface was built to give.
+
+    The failure is still written to the log. On screen an empty list and a
+    request that never happened look identical, so without this a channel that
+    stopped working for some reason other than having no videos would look like
+    a channel with nothing in it and nothing to investigate.
+    """
+    try:
+        return get_doc(url)
+    except Exception as exc:
+        print(f"bfch_xnxx: {url} could not be read ({exc.__class__.__name__})")
+        return None
 
 
 def _extract(doc):
     results = PlayItemList()
+    if doc is None:
+        return results
     for block in select_all(doc, "div.thumb-block"):
         item = _item(block)
         # One malformed card should cost that card, not the whole feed.
