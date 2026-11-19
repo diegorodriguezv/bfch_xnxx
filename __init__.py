@@ -5,6 +5,11 @@ import lxml.etree
 from lib.chanutils import get_attr, get_doc, get_text, select_all, select_one
 from lib.playitem import PlayItem, PlayItemList
 
+#: Nothing on this site has subtitles, and no subtitle service can help with
+#: clips. Without this the platform offers Add Subtitles on every row, which
+#: searches OpenSubtitles for a title that does not exist and finds nothing.
+SUPPORTS_SUBTITLES = False
+
 # The site redirects the bare host to www on every request, and /tags/* to
 # /search/*. Going straight to where it lands saves a redirect per feed.
 _ROOT_URL = "https://www.xnxx.com"
